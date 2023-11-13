@@ -13,6 +13,7 @@ System.Diagnostics.Eventing.Reader.EventLogWatcher new(System.Diagnostics.Eventi
 # https://learn.microsoft.com/dotnet/api/system.diagnostics.eventing.reader.eventlogwatcher
 # https://learn.microsoft.com/en-us/dotnet/api/system.diagnostics.eventing.reader.eventlogwatcher.eventrecordwritten?view=dotnet-plat-ext-6.0
 # https://learn.microsoft.com/en-us/previous-versions/bb671202(v=vs.90)
+
 $elw = [System.Diagnostics.Eventing.Reader.EventLogWatcher]::new('System')
 $elw.Enabled = $true
 Register-ObjectEvent -InputObject $elw -EventName 'EventRecordWritten' -MessageData 'There is a new System event log record' -SourceIdentifier 'WatchSystem'
@@ -22,8 +23,9 @@ Get-EventSubscriber
 Get-Event
 #doesn't include the message
 (Get-Event)[-1].SourceEventArgs.EventRecord | select *
+
 <#
-PS Substack:\eventing-1> (get-event)[-1].sourceeventargs.eventrecord | select *
+PS Substack:\eventing-1> (Get-Event)[-1].SourceEventArgs.EventRecord | select *
 
 Id                   : 114
 Version              : 0

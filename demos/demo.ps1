@@ -11,7 +11,8 @@ Learning Objective 3: Learn how to use event subscribers
 #list log
 Get-WinEvent -ListLog *powershell*
 Get-WinEvent -ListLog *
-Get-WinEvent -ListLog * | where RecordCount -GT 0 | sort RecordCount -Descending | select -First 20
+Get-WinEvent -ListLog * | Where-Object RecordCount -GT 0 |
+Sort-Object RecordCount -Descending | Select-Object -First 20
 
 #computer
 Get-WinEvent -ListLog *active* -ComputerName dom1
@@ -25,7 +26,7 @@ Get-WinEvent 'Active Directory Web Services' -ComputerName dom1 -MaxEvents 10
 help Get-WinEvent -Parameter FilterHashTable
 
 #look at an object
-Get-WinEvent System -max 1 | select *
+Get-WinEvent System -max 1 | Select-Object *
 
 #id
 Get-WinEvent -FilterHashtable @{LogName = 'System'; ID = 6005, 6006 } -MaxEvents 10
@@ -36,8 +37,8 @@ Get-WinEvent -FilterHashtable @{LogName = 'System'; Level = 3 } -MaxEvents 10
 Get-WinEvent -FilterHashtable @{LogName = 'System'; Level = 4 } -MaxEvents 10
 Get-WinEvent -FilterHashtable @{LogName = 'System'; Level = 2, 3 } -MaxEvents 20
 
-Get-WinEvent system -MaxEvents 1000 | group Level
-Get-WinEvent system -MaxEvents 2000 | group -Property {
+Get-WinEvent system -MaxEvents 1000 | Group-Object Level
+Get-WinEvent system -MaxEvents 2000 | Group-Object -Property {
   Switch ($_.Level) {
     2 { 'Error' }
     3 { 'Warning' }
@@ -171,7 +172,7 @@ psedit .\get-eventlogusage.ps1
 . .\get-eventlogusage.ps1
 
 Get-EventLogUsage Application
-Get-EventLogUsage -computer srv1, srv2 -EnabledOnly | where RecordCount -GT 0 | Out-GridView
+Get-EventLogUsage -computer srv1, srv2 -EnabledOnly | Where-Object RecordCount -GT 0 | Out-GridView
 
 #open event log viewer to see changes
 Show-EventLog
