@@ -9,16 +9,23 @@ Learning Objective 3: Learn how to use event subscribers
 #region basics
 
 #list log
-Get-WinEvent -ListLog *powershell*
 Get-WinEvent -ListLog *
-Get-WinEvent -ListLog * | Where-Object RecordCount -GT 0 |
-Sort-Object RecordCount -Descending | Select-Object -First 20
+Get-WinEvent -ListLog *powershell*
+Get-WinEvent -ListLog * | Tee-Object -Variable l
 
-#computer
+$l | Get-Member -MemberType Properties
+
+Get-WinEvent -ListLog * | Where-Object RecordCount -GT 0 |
+Sort-Object RecordCount -Descending |
+Select-Object -First 10 -Property LogName, RecordCount, FileSize, LastWriteTime
+
+#remote computer computer
 Get-WinEvent -ListLog *active* -ComputerName dom1
 
 #max events
 Get-WinEvent 'Active Directory Web Services' -ComputerName dom1 -MaxEvents 10
+
+Get-WinEvent 'Active Directory Web Services' -ComputerName dom1 -MaxEvents 10 | format-list
 
 #endregion
 
@@ -35,9 +42,17 @@ Get-WinEvent -FilterHashtable @{LogName = 'System'; ID = 6005, 6006 } -MaxEvents
 Get-WinEvent -FilterHashtable @{LogName = 'System'; Level = 2 } -MaxEvents 10
 Get-WinEvent -FilterHashtable @{LogName = 'System'; Level = 3 } -MaxEvents 10
 Get-WinEvent -FilterHashtable @{LogName = 'System'; Level = 4 } -MaxEvents 10
-Get-WinEvent -FilterHashtable @{LogName = 'System'; Level = 2, 3 } -MaxEvents 20
+Get-WinEvent -FilterHashtable @{LogName = 'System'; Level = 2,3 } -MaxEvents 20
 
 Get-WinEvent system -MaxEvents 1000 | Group-Object Level
+Get-WinEvent system -MaxEvents 1000 | Group-Object Level -NoElement
+
+Get-WinEvent system -MaxEvents 1000 | Group-Object Level -NoElement |
+Select Count,Name,
+@{Name="Log";Expression = {"System"}},
+@{Name="Computername";Expression = {$env:COMPUTERNAME}}
+
+
 Get-WinEvent system -MaxEvents 2000 | Group-Object -Property {
   Switch ($_.Level) {
     2 { 'Error' }
@@ -50,6 +65,7 @@ Get-WinEvent system -MaxEvents 2000 | Group-Object -Property {
 Get-WinEvent -FilterHashtable @{LogName = 'System'; Level = 2, 3; StartTime = (Get-Date).AddHours(-24) }
 
 #endregion
+
 #region Filtering with XPath
 
 $xml = @'
@@ -84,6 +100,7 @@ Get-WinEvent -LogName System -FilterXPath $xpath | Convert-EventLogRecord
 #endregion
 
 #endregion
+
 #region Filtering at scale
 
 # 6005 event log service started
@@ -99,11 +116,11 @@ $splat = @{
 }
 #not using MachineName property from the event log
 #because it can change
-$r = foreach ($c in $computers) {
-  $splat['Computername'] = $c
+$r = foreach ($computer in $computers) {
+  $splat['Computername'] = $computer
   Get-WinEvent @splat |
   Select-Object -Property LogName, TimeCreated, ID, Message,
-  @{Name = 'Computername'; Expression = { $c } }
+  @{Name = 'Computername'; Expression = { $computer } }
 }
 
 #remoting
@@ -145,7 +162,10 @@ $q = $computers | ForEach-Object {
 } | Wait-Job | Receive-Job -Keep |
 Select-Object -Property * -ExcludeProperty RunSpaceID
 
+
 #foreach-parallel
+$logname = "System"
+$max = 500
 $p = $computers | ForEach-Object -Parallel {
   $computer = $_
   $start = Get-Date
@@ -166,6 +186,7 @@ $p = $computers | ForEach-Object -Parallel {
 }
 
 #endregion
+
 #region Event log management
 
 psedit .\get-eventlogusage.ps1
@@ -222,6 +243,7 @@ Get-WinEvent -LogName 'microsoft-windows-powershell/operational'
 
 powershell -NoLogo -NoProfile -command '&{Get-Process p*}'
 Get-WinEvent -LogName 'microsoft-windows-powershell/operational'
+#endregion
 
 #region Event subscribers
 psedit .\watch-EventLog.ps1
